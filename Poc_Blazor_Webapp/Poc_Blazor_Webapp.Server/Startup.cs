@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
+using Swashbuckle.AspNetCore.Swagger;
 using System.Linq;
 using System.Net.Mime;
 
@@ -18,11 +19,24 @@ namespace Poc_Blazor_Webapp.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().AddJsonOptions(options =>
+            services
+                .AddMvc()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                });
+            
+            services.AddSwaggerGen(c =>
             {
-                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                c.SwaggerDoc("v1",
+                    new Info
+                    {
+                        Version = "v1",
+                        Title = "Blazor Server API",
+                        Description = "A sample API for a Blazor sample app",
+                    });
             });
-
+                    
             services.AddResponseCompression(options =>
             {
                 options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
@@ -37,15 +51,21 @@ namespace Poc_Blazor_Webapp.Server
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseResponseCompression();
-
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            app.UseDeveloperExceptionPage();
 
             app.UseMvc(routes =>
             {
                 routes.MapRoute(name: "default", template: "{controller}/{action}/{id?}");
+            });
+
+            app.UseSwagger(c =>
+            {
+                c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
+            });
+
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "swagger"; 
             });
 
             app.UseBlazor<Client.Program>();

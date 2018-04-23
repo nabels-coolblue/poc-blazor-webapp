@@ -17,7 +17,7 @@ namespace Poc_Blazor_Webapp.Server
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(new ConfigurationBuilder()
-                    .AddCommandLine(args)
+                    .AddCommandLine(args)                
                     .Build())
                 .UseStartup<Startup>()
                 .Build();
